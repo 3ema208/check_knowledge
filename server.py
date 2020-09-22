@@ -1,6 +1,7 @@
 import threading
 import socket
 import enum
+import random
 
 
 class Command(enum.Enum):
@@ -10,15 +11,19 @@ class Command(enum.Enum):
 def run_server():
     clients = []
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    sock.bind(('localhost', 8877))
+    sock.bind(
+        ('localhost', 8877)
+    )
     sock.listen(10)
     while True:
         try:
             conn, add = sock.accept()
+            print("Connect new client -> {} {}".format(add, conn))
             t = threading.Thread(target=handler_client, args=(conn, add))
             clients.append(t)
             t.start()
-        except Exception:
+        except Exception as e:
+            print("error ->", e)
             break
     [c.join() for c in clients]
 
@@ -32,13 +37,16 @@ def handler_client(conn: socket.socket, add):
         try:
             cmd = Command(data.decode().strip())
             if cmd == Command.GET_IMAGE:
+                print("Send image")
                 d = read_images('image.jpg')
                 r = list(zip([i + 1 for i in range(len(d))], d))
+                random.shuffle(r)
                 for number_chunk, d in r:
                     conn.send(bytes(number_chunk) + d + b'\r\n')
                 conn.close()
                 return
         except ValueError:
+            print("Cmd not found {} {}".format(add, conn))
             conn.send(b'CMD not found!\r\n')
 
 
