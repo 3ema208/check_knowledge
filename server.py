@@ -38,11 +38,11 @@ def handler_client(conn: socket.socket, add):
             cmd = Command(data.decode().strip())
             if cmd == Command.GET_IMAGE:
                 print("Send image")
-                d = read_images('image.jpg')
-                r = list(zip([i + 1 for i in range(len(d))], d))
+                d = read_image('image.jpg')
+                r = list(zip(["{}".format(i + 1) for i in range(len(d))], d))
                 random.shuffle(r)
                 for number_chunk, d in r:
-                    conn.send(bytes(number_chunk) + d + b'\r\n')
+                    conn.send(number_chunk.encode() + d + b'\r\n')
                 conn.close()
                 return
         except ValueError:
@@ -50,7 +50,7 @@ def handler_client(conn: socket.socket, add):
             conn.send(b'CMD not found!\r\n')
 
 
-def read_images(path) -> list:
+def read_image(path) -> list:
     d = list()
     with open(path, 'rb') as f:
         while True:
